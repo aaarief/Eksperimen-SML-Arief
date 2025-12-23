@@ -9,7 +9,7 @@ jobs:
   preprocess:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  
+      contents: write  # PENTING: Izin untuk push balik ke repo
 
     steps:
     - name: Checkout code
