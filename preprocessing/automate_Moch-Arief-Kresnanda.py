@@ -154,10 +154,30 @@ if __name__ == "__main__":
         X_train['y'] = y_train
         X_test['y'] = y_test
         
-        X_train.to_csv(f'{output_dir}/train_processed.csv', index=False)
-        X_test.to_csv(f'{output_dir}/test_processed.csv', index=False)
+        # 1. Simpan di Root (Untuk kemudahan akses script modelling nanti)
+        X_train.to_csv('train_processed.csv', index=False)
+        X_test.to_csv('test_processed.csv', index=False)
         
-        print(f"Preprocessing selesai! File tersimpan di folder: {output_dir}")
+        # 2. Simpan sesuai Struktur Submission (Kriteria Tugas)
+        # Buat folder khusus: preprocessing/bank_marketing_preprocessing
+        submission_folder = os.path.join('preprocessing', 'bank_marketing_preprocessing')
+        
+        # Pastikan folder preprocessing ada dulu (jika running dari root)
+        if not os.path.exists('preprocessing'):
+             # Jika tidak ada folder preprocessing di root, mungkin kita ada di dalam folder preprocessing
+             # Cek logika path output_dir sebelumnya
+             pass 
+
+        # Buat folder submission jika belum ada
+        if not os.path.exists(submission_folder):
+            os.makedirs(submission_folder)
+            
+        X_train.to_csv(os.path.join(submission_folder, 'train_processed.csv'), index=False)
+        X_test.to_csv(os.path.join(submission_folder, 'test_processed.csv'), index=False)
+        
+        print(f"Preprocessing selesai!")
+        print(f"1. File Root: train_processed.csv & test_processed.csv")
+        print(f"2. File Submission: Folder '{submission_folder}' berisi train & test.")
         
     except Exception as e:
         print(f"Terjadi error: {e}")
