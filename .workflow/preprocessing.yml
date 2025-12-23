@@ -1,0 +1,22 @@
+name: Data Preprocessing
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  preprocess:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        pip install pandas numpy scikit-learn
+    - name: Run Preprocessing
+      run: |
+        cd Eksperimen_SML_Moch-Arief-Kresnanda/preprocessing
+        python automate_Moch-Arief-Kresnanda.py
