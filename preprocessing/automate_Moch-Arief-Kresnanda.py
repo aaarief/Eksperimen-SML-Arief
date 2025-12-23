@@ -14,36 +14,36 @@ def load_data(path):
     return pd.read_csv(path, sep=';')
 
 def preprocess_data(df):
-    # 1. Drop 'duration' column
+    # Drop kolom irelevan
     if 'duration' in df.columns:
         df = df.drop(columns=['duration'])
     
-    # 2. Handle duplicates
+    # hapus duplikat
     df = df.drop_duplicates()
     
-    # --- Feature Engineering pdays ---
+    # ubah pdays menjadi kategori biner
     if 'pdays' in df.columns:
         df['previously_contacted'] = np.where(df['pdays'] == 999, 0, 1)
         df = df.drop(columns=['pdays'])
         
-    # --- Capping Outliers pada 'campaign' ---
+    # batasi nilai campaign
     if 'campaign' in df.columns:
         upper_limit = df['campaign'].quantile(0.99)
         df['campaign'] = np.where(df['campaign'] > upper_limit, upper_limit, df['campaign'])
     
-    # 3. Separate features and target
+    # Pisahkan fitur dan target
     if 'y' in df.columns:
         X = df.drop(columns=['y'])
         y = df['y']
         
-        # 4. Encode target variable
+        # Encode target variable
         le = LabelEncoder()
         y = le.fit_transform(y)
     else:
         X = df
         y = None
     
-    # 5. Identify columns types (Hybrid Strategy)
+    # Identifikasi tipe kolom
     ordinal_cols = ['education', 'default', 'housing', 'loan', 'contact', 'month', 'day_of_week']
     
     education_order = ['illiterate', 'basic.4y', 'basic.6y', 'basic.9y', 'high.school', 'professional.course', 'university.degree', 'unknown']
@@ -64,7 +64,7 @@ def preprocess_data(df):
     numerical_cols = X.select_dtypes(include=['int64', 'float64']).columns
     numerical_cols = [col for col in numerical_cols if col not in ordinal_cols and col not in categorical_cols]
     
-    # 6. Preprocessing pipeline
+    # Preprocessing pipeline
     numerical_transformer = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='median')),
         ('yeo_johnson', PowerTransformer(method='yeo-johnson')),
@@ -88,21 +88,20 @@ def preprocess_data(df):
             ('cat_ordinal', ordinal_transformer, ordinal_cols)
         ])
     
-    # 7. Split data
+    # Split data
     if y is not None:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
         
-        # 8. Apply preprocessing
+        # Terapkan preprocessing
         X_train_processed = preprocessor.fit_transform(X_train)
         X_test_processed = preprocessor.transform(X_test)
         
-        # --- Handle Imbalance dengan SMOTE ---
+        # Handle Imbalance dengan SMOTE 
         print("Before SMOTE counts:", np.bincount(y_train))
         smote = SMOTE(random_state=42)
         X_train_resampled, y_train_resampled = smote.fit_resample(X_train_processed, y_train)
         print("After SMOTE counts:", np.bincount(y_train_resampled))
         
-        # Get feature names
         cat_nominal_names = preprocessor.named_transformers_['cat_nominal']['onehot'].get_feature_names_out(categorical_cols)
         feature_names = list(numerical_cols) + list(cat_nominal_names) + list(ordinal_cols)
         
@@ -112,15 +111,13 @@ def preprocess_data(df):
         
         return X_train_df, X_test_df, y_train_resampled, y_test, preprocessor
     else:
-        # If no target, just transform X
         X_processed = preprocessor.fit_transform(X)
         return X_processed, preprocessor
 
 if __name__ == "__main__":
     import os
     
-    # Path file disesuaikan dengan struktur folder repository
-    # Asumsi script dijalankan dari root repository (standar GitHub Actions)
+
     input_path = 'Eksperimen_SML_Moch-Arief-Kresnanda/bank-additional-full_raw.csv'
     
     # Jika dijalankan manual dari dalam folder preprocessing, sesuaikan path
@@ -130,45 +127,38 @@ if __name__ == "__main__":
     print(f"Memproses data dari: {input_path}")
     
     try:
-        # Load data
         df = load_data(input_path)
         
-        # Jalankan fungsi preprocessing
         X_train, X_test, y_train, y_test, _ = preprocess_data(df)
         
         print("Data processed successfully.")
         print("X_train shape:", X_train.shape)
         print("X_test shape:", X_test.shape)
         
-        # Simpan hasil (Output)
-        # Disimpan di folder Eksperimen_SML_... agar rapi
+        # Simpan hasil
         output_dir = 'Eksperimen_SML_Moch-Arief-Kresnanda'
         
-        # Jika folder output tidak ada (misal running dari dalam folder preprocessing), gunakan folder parent
+        # Jika folder output tidak ada
         if not os.path.exists(output_dir) and os.path.exists('../bank-additional-full_raw.csv'):
              output_dir = '..'
         elif not os.path.exists(output_dir):
-             output_dir = '.' # Fallback ke folder saat ini
+             output_dir = '.'
             
         # Gabungkan target kembali ke dataframe agar mudah disimpan
         X_train['y'] = y_train
         X_test['y'] = y_test
         
-        # 1. Simpan di Root (Untuk kemudahan akses script modelling nanti)
+        # Simpan
         X_train.to_csv('train_processed.csv', index=False)
         X_test.to_csv('test_processed.csv', index=False)
         
-        # 2. Simpan sesuai Struktur Submission (Kriteria Tugas)
+        # Simpan sesuai Struktur Submission
         # Buat folder khusus: preprocessing/bank_marketing_preprocessing
         submission_folder = os.path.join('preprocessing', 'bank_marketing_preprocessing')
         
-        # Pastikan folder preprocessing ada dulu (jika running dari root)
         if not os.path.exists('preprocessing'):
-             # Jika tidak ada folder preprocessing di root, mungkin kita ada di dalam folder preprocessing
-             # Cek logika path output_dir sebelumnya
              pass 
 
-        # Buat folder submission jika belum ada
         if not os.path.exists(submission_folder):
             os.makedirs(submission_folder)
             
