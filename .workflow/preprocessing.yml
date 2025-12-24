@@ -9,7 +9,7 @@ jobs:
   preprocess:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  
+      contents: write
 
     steps:
     - name: Checkout code
@@ -27,7 +27,7 @@ jobs:
 
     - name: Run Preprocessing Script
       run: |
-        # KOREKSI: Langsung panggil folder preprocessing dari root
+        # Menjalankan script yang ada di folder preprocessing
         python preprocessing/automate_Moch-Arief-Kresnanda.py
 
     - name: Commit and Push Processed Data
@@ -37,6 +37,9 @@ jobs:
         
         # Add folder submission (GitHub akan otomatis add semua file di dalamnya)
         git add preprocessing/bank_marketing_preprocessing/
+        
+        # Add folder .workflow (agar reviewer lihat)
+        git add .workflow/preprocessing.yml
         
         # Commit jika ada perubahan
         git commit -m "Auto-update: Processed datasets & Submission structure" || echo "No changes to commit"
