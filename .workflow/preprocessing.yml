@@ -46,4 +46,8 @@ jobs:
         
         # Commit jika ada perubahan
         git commit -m "Auto-update: Processed datasets & Submission structure" || echo "No changes to commit"
+        
+        # Pull latest changes to avoid conflicts
+        git pull --rebase origin main
+        
         git push
