@@ -116,51 +116,40 @@ def preprocess_data(df):
 
 if __name__ == "__main__":
     import os
-    
+    import sys
 
-    input_path = 'Eksperimen_SML_Moch-Arief-Kresnanda/bank-additional-full_raw.csv'
-    
-    # Jika dijalankan manual dari dalam folder preprocessing, sesuaikan path
-    if not os.path.exists(input_path):
-        input_path = '../bank-additional-full_raw.csv'
+    # Logika Path Sederhana: Cari dataset di lokasi standar atau root
+    if os.path.exists('Eksperimen_SML_Moch-Arief-Kresnanda/bank-additional-full_raw.csv'):
+        input_path = 'Eksperimen_SML_Moch-Arief-Kresnanda/bank-additional-full_raw.csv'
+        output_dir = 'Eksperimen_SML_Moch-Arief-Kresnanda'
+    elif os.path.exists('bank-additional-full_raw.csv'):
+        input_path = 'bank-additional-full_raw.csv'
+        output_dir = '.'
+    else:
+        print("Error: Dataset 'bank-additional-full_raw.csv' tidak ditemukan.")
+        sys.exit(1) # Pastikan exit code error agar Workflow berhenti
 
     print(f"Memproses data dari: {input_path}")
     
-    try:
-        df = load_data(input_path)
+    # Hapus try-except agar error asli terlihat di log GitHub Actions
+    df = load_data(input_path)
+    
+    X_train, X_test, y_train, y_test, _ = preprocess_data(df)
+    
+    print("Data processed successfully.")
+    
+    # Gabungkan target kembali
+    X_train['y'] = y_train
+    X_test['y'] = y_test
+    
+    # Simpan hasil di folder submission
+    submission_folder = os.path.join(output_dir, 'preprocessing', 'bank_marketing_preprocessing')
+    
+    if not os.path.exists(submission_folder):
+        os.makedirs(submission_folder)
+        print(f"Membuat folder: {submission_folder}")
         
-        X_train, X_test, y_train, y_test, _ = preprocess_data(df)
-        
-        print("Data processed successfully.")
-        print("X_train shape:", X_train.shape)
-        print("X_test shape:", X_test.shape)
-        
-        # Simpan hasil
-        output_dir = 'Eksperimen_SML_Moch-Arief-Kresnanda'
-        
-        # Jika folder output tidak ada
-        if not os.path.exists(output_dir) and os.path.exists('../bank-additional-full_raw.csv'):
-             output_dir = '..'
-        elif not os.path.exists(output_dir):
-             output_dir = '.'
-            
-        # Gabungkan target kembali ke dataframe agar mudah disimpan
-        X_train['y'] = y_train
-        X_test['y'] = y_test
-        
-        # Simpan sesuai Struktur Submission (di dalam folder preprocessing)
-        # Target: output_dir/preprocessing/bank_marketing_preprocessing
-        submission_folder = os.path.join(output_dir, 'preprocessing', 'bank_marketing_preprocessing')
-        
-        if not os.path.exists(submission_folder):
-            os.makedirs(submission_folder)
-            
-        X_train.to_csv(os.path.join(submission_folder, 'train_processed.csv'), index=False)
-        X_test.to_csv(os.path.join(submission_folder, 'test_processed.csv'), index=False)
-        
-        print(f"Preprocessing selesai!")
-        print(f"File Submission tersimpan di: Folder '{submission_folder}' berisi train & test.")
-        
-    except Exception as e:
-        print(f"Terjadi error: {e}")
-        print("Pastikan file dataset ada di lokasi yang benar.")
+    X_train.to_csv(os.path.join(submission_folder, 'train_processed.csv'), index=False)
+    X_test.to_csv(os.path.join(submission_folder, 'test_processed.csv'), index=False)
+    
+    print(f"Preprocessing selesai! File tersimpan di: {submission_folder}")
