@@ -67,7 +67,8 @@ def preprocess_data(df):
     # Preprocessing pipeline
     numerical_transformer = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='median')),
-        ('yeo_johnson', PowerTransformer(method='yeo-johnson')),
+        # Ganti Yeo-Johnson dengan StandardScaler saja untuk stabilitas
+        # Yeo-Johnson sering gagal (overflow) jika data memiliki variansi ekstrem atau outlier parah
         ('scaler', StandardScaler())
     ])
     
