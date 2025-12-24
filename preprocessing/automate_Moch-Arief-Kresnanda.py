@@ -118,21 +118,37 @@ if __name__ == "__main__":
     import os
     import sys
 
-    # Logika Path Sederhana: Cari dataset di lokasi standar atau root
-    if os.path.exists('Eksperimen_SML_Moch-Arief-Kresnanda/bank-additional-full_raw.csv'):
-        input_path = 'Eksperimen_SML_Moch-Arief-Kresnanda/bank-additional-full_raw.csv'
-        output_dir = 'Eksperimen_SML_Moch-Arief-Kresnanda'
-    elif os.path.exists('bank-additional-full_raw.csv'):
-        input_path = 'bank-additional-full_raw.csv'
-        output_dir = '.'
-    else:
-        print("Error: Dataset 'bank-additional-full_raw.csv' tidak ditemukan.")
-        sys.exit(1) # Pastikan exit code error agar Workflow berhenti
-
-    print(f"Memproses data dari: {input_path}")
+    print(f"DEBUG: Current Working Directory: {os.getcwd()}")
     
-    # Hapus try-except agar error asli terlihat di log GitHub Actions
-    df = load_data(input_path)
+    # 1. SETUP PATH (Prioritas: Struktur GitHub Actions Root)
+    # Input ada di root repository
+    input_path = 'bank-additional-full_raw.csv'
+    # Output ada di folder preprocessing/bank_marketing_preprocessing
+    output_folder = os.path.join('preprocessing', 'bank_marketing_preprocessing')
+
+    # --- FALLBACK UNTUK LOKAL ---
+    if not os.path.exists(input_path):
+        # Coba naik satu level (jika dijalankan dari dalam folder preprocessing)
+        if os.path.exists('../bank-additional-full_raw.csv'):
+            input_path = '../bank-additional-full_raw.csv'
+            output_folder = 'bank_marketing_preprocessing'
+        # Coba struktur folder eksperimen lengkap (jika dijalankan dari root workspace lokal)
+        elif os.path.exists('Eksperimen_SML_Moch-Arief-Kresnanda/bank-additional-full_raw.csv'):
+            input_path = 'Eksperimen_SML_Moch-Arief-Kresnanda/bank-additional-full_raw.csv'
+            output_folder = os.path.join('Eksperimen_SML_Moch-Arief-Kresnanda', 'preprocessing', 'bank_marketing_preprocessing')
+        else:
+            print(f"Error: Dataset tidak ditemukan di {input_path} atau lokasi fallback lainnya.")
+            sys.exit(1)
+
+    print(f"DEBUG: Input Path: {input_path}")
+    print(f"DEBUG: Output Folder: {output_folder}")
+    
+    # Load data
+    try:
+        df = load_data(input_path)
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        sys.exit(1)
     
     X_train, X_test, y_train, y_test, _ = preprocess_data(df)
     
@@ -142,14 +158,12 @@ if __name__ == "__main__":
     X_train['y'] = y_train
     X_test['y'] = y_test
     
-    # Simpan hasil di folder submission
-    submission_folder = os.path.join(output_dir, 'preprocessing', 'bank_marketing_preprocessing')
-    
-    if not os.path.exists(submission_folder):
-        os.makedirs(submission_folder)
-        print(f"Membuat folder: {submission_folder}")
+    # Buat folder output jika belum ada
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+        print(f"Membuat folder: {output_folder}")
         
-    X_train.to_csv(os.path.join(submission_folder, 'train_processed.csv'), index=False)
-    X_test.to_csv(os.path.join(submission_folder, 'test_processed.csv'), index=False)
+    X_train.to_csv(os.path.join(output_folder, 'train_processed.csv'), index=False)
+    X_test.to_csv(os.path.join(output_folder, 'test_processed.csv'), index=False)
     
-    print(f"Preprocessing selesai! File tersimpan di: {submission_folder}")
+    print(f"Preprocessing selesai! File tersimpan di: {output_folder}")
