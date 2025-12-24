@@ -35,14 +35,9 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-        # KOREKSI: File output akan tersimpan di root (karena script fallback ke '.')
-        # Pastikan nama file sesuai dengan output script python Anda
-        git add train_processed.csv
-        git add test_processed.csv
-        # Jika ada file target terpisah
-        # git add y_train_processed.csv
-        # git add y_test_processed.csv
+        # Add folder submission (GitHub akan otomatis add semua file di dalamnya)
+        git add preprocessing/bank_marketing_preprocessing/
         
         # Commit jika ada perubahan
-        git commit -m "Auto-update: Processed datasets by GitHub Actions" || echo "No changes to commit"
+        git commit -m "Auto-update: Processed datasets & Submission structure" || echo "No changes to commit"
         git push
